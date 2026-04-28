@@ -66,6 +66,9 @@ class ExamCubit extends Cubit<ExamState> {
     String? initialQuestion,
     List<String>? initialOptions,
     int? initialCorrectAnswerIndex,
+    List<
+      ({String question, List<String> options, int correctAnswerIndex})
+    >? initialQuestions,
   }) async {
     try {
       emit(
@@ -82,17 +85,29 @@ class ExamCubit extends Cubit<ExamState> {
         createdBy: createdBy,
       );
 
-      if (initialQuestion != null &&
-          initialOptions != null &&
-          initialCorrectAnswerIndex != null) {
+      final questionsToAdd =
+          initialQuestions ??
+          [
+            if (initialQuestion != null &&
+                initialOptions != null &&
+                initialCorrectAnswerIndex != null)
+              (
+                question: initialQuestion,
+                options: initialOptions,
+                correctAnswerIndex: initialCorrectAnswerIndex,
+              ),
+          ];
+
+      for (var index = 0; index < questionsToAdd.length; index++) {
+        final questionToAdd = questionsToAdd[index];
         await _addQuestionUseCase(
           examId: exam.id,
           question: ExamQuestion(
-            id: DateTime.now().millisecondsSinceEpoch.toString(),
-            question: initialQuestion,
-            options: initialOptions,
-            correctAnswerIndex: initialCorrectAnswerIndex,
-            order: 0,
+            id: '${DateTime.now().millisecondsSinceEpoch}_$index',
+            question: questionToAdd.question,
+            options: questionToAdd.options,
+            correctAnswerIndex: questionToAdd.correctAnswerIndex,
+            order: index,
           ),
         );
       }

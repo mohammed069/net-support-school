@@ -9,6 +9,7 @@ import '../../features/auth/presentation/pages/sign_up_page.dart';
 import '../../features/exam/presentation/cubit/exam_cubit.dart';
 import '../../features/exam/presentation/pages/exam_designer_page.dart';
 import '../../features/exam/presentation/pages/exam_screen_page.dart';
+import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/student/presentation/cubit/student_cubit.dart';
 import '../../features/student/presentation/pages/student_home_page.dart';
 import '../../features/tutor/presentation/cubit/tutor_cubit.dart';
@@ -28,6 +29,7 @@ class AppRouter {
   static const examScreenPath = '/exam-screen';
   static const reportPath = '/report';
   static const examDesignerPath = '/exam-designer';
+  static const settingsPath = '/settings';
 
   final AuthCubit _authCubit;
 
@@ -44,6 +46,10 @@ class AppRouter {
       GoRoute(
         path: roleSelectionPath,
         builder: (context, state) => const RoleSelectionPage(),
+      ),
+      GoRoute(
+        path: settingsPath,
+        builder: (context, state) => const SettingsPage(),
       ),
       GoRoute(
         path: studentHomePath,
@@ -111,6 +117,10 @@ class AppRouter {
   String? _redirect(BuildContext context, GoRouterState state) {
     final user = _authCubit.state.user;
     final location = state.matchedLocation;
+
+    if (location == settingsPath) {
+      return null;
+    }
 
     if (user == null) {
       return location == loginPath || location == signUpPath ? null : loginPath;

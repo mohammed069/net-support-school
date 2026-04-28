@@ -59,6 +59,10 @@ class _StudentHomeView extends StatelessWidget {
           title: Text(l10n.text('student_home')),
           actions: [
             IconButton(
+              onPressed: () => context.push(AppRouter.settingsPath),
+              icon: const Icon(Icons.settings_rounded),
+            ),
+            IconButton(
               onPressed: () => context.read<AuthCubit>().signOut(),
               icon: const Icon(Icons.logout_rounded),
             ),

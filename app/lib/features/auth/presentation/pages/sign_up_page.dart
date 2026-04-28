@@ -36,12 +36,21 @@ class _SignUpPageState extends State<SignUpPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
+      appBar: AppBar(
+        actions: [
+          IconButton(
+            onPressed: () => context.push(AppRouter.settingsPath),
+            icon: const Icon(Icons.settings_rounded),
+          ),
+        ],
+      ),
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFFE7F7F4), Color(0xFFF8FBFC)],
+            colors: [colorScheme.primaryContainer, colorScheme.surface],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),

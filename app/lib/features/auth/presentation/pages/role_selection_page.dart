@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/enums/request_status.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/context_extensions.dart';
 import '../../../../shared/services/toast_service.dart';
 import '../cubit/auth_cubit.dart';
@@ -20,6 +22,10 @@ class RoleSelectionPage extends StatelessWidget {
       appBar: AppBar(
         title: Text(l10n.text('choose_role')),
         actions: [
+          IconButton(
+            onPressed: () => context.push(AppRouter.settingsPath),
+            icon: const Icon(Icons.settings_rounded),
+          ),
           TextButton(
             onPressed: () => context.read<AuthCubit>().signOut(),
             child: Text(l10n.text('logout')),
@@ -144,7 +150,7 @@ class _RoleCard extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(28),
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           border: Border.all(
             color: Theme.of(context).colorScheme.outlineVariant,
           ),

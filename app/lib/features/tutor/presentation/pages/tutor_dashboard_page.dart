@@ -13,6 +13,7 @@ import '../../../../shared/widgets/loading_view.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../exam/presentation/cubit/exam_cubit.dart';
 import '../../../exam/presentation/cubit/exam_state.dart';
+import '../../../exam/presentation/pages/exam_designer_page.dart';
 import '../../domain/entities/student_overview.dart';
 import '../cubit/tutor_cubit.dart';
 import '../cubit/tutor_state.dart';
@@ -60,6 +61,10 @@ class _TutorDashboardView extends StatelessWidget {
             ],
           ),
           actions: [
+            IconButton(
+              onPressed: () => context.push(AppRouter.settingsPath),
+              icon: const Icon(Icons.settings_rounded),
+            ),
             IconButton(
               onPressed: () => context.read<AuthCubit>().signOut(),
               icon: const Icon(Icons.logout_rounded),
@@ -203,6 +208,9 @@ class _ExamsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final currentUserId = context.select(
+      (AuthCubit cubit) => cubit.state.user?.id,
+    );
 
     return BlocBuilder<ExamCubit, ExamState>(
       builder: (context, examState) {
@@ -218,9 +226,15 @@ class _ExamsTab extends StatelessWidget {
                 children: [
                   Expanded(
                     child: AppPrimaryButton(
-                      label: l10n.text('open_designer'),
-                      icon: Icons.design_services_rounded,
-                      onPressed: () => context.push(AppRouter.examDesignerPath),
+                      label: l10n.text('create_exam'),
+                      icon: Icons.add_rounded,
+                      onPressed:
+                          currentUserId == null
+                              ? null
+                              : () => showCreateExamSheet(
+                                context,
+                                currentUserId: currentUserId,
+                              ),
                     ),
                   ),
                 ],
