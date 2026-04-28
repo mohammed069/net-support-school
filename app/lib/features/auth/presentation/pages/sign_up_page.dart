@@ -61,23 +61,14 @@ class _SignUpPageState extends State<SignUpPage> {
                             state.errorMessage != null) {
                           ToastService.error(state.errorMessage!);
                         }
+
                         if (state.status == RequestStatus.success &&
                             state.user != null) {
                           ToastService.success(
                             l10n.text('success_account_created'),
                           );
                           if (!context.mounted) return;
-                          // debug log to help diagnose navigation issues
-                          // ignore: avoid_print
-                          print(
-                            'Auth: signup success — navigating to role selection',
-                          );
-                          // debug: rely on router redirect to send user to role selection
-                          // ignore: avoid_print
-                          print(
-                            'Auth: signup success — emitted user, router should redirect',
-                          );
-                          // Navigation is handled by AppRouter.redirect using AuthCubit's state.
+                          context.go(AppRouter.roleSelectionPath);
                         }
                       },
                       builder: (context, state) {
@@ -187,9 +178,6 @@ class _SignUpPageState extends State<SignUpPage> {
                                     return;
                                   }
 
-                                  // debug: user tapped create account
-                                  // ignore: avoid_print
-                                  print('SignUpPage: create_account pressed');
                                   context.read<AuthCubit>().signUpWithEmail(
                                     name: _nameController.text.trim(),
                                     email: _emailController.text.trim(),

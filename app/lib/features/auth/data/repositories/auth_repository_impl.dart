@@ -31,37 +31,21 @@ class AuthRepositoryImpl implements AuthRepository {
 
     controller = StreamController<AppUser?>.broadcast(
       onListen: () {
-        // debug: start listening to Firebase auth state changes
-        // ignore: avoid_print
-        print('AuthRepository: start listening authStateChanges');
         authSubscription = _remoteDataSource.authStateChanges().listen((
           firebaseUser,
         ) async {
-          // debug: firebase auth state changed
-          // ignore: avoid_print
-          print('AuthRepository: authStateChanges -> ${firebaseUser?.uid}');
           await profileSubscription?.cancel();
 
           if (firebaseUser == null) {
-            // debug: no firebase user
-            // ignore: avoid_print
-            print('AuthRepository: firebaseUser is null -> emitting null');
             controller.add(null);
             return;
           }
 
-          // debug: ensuring user document exists for firebase uid
-          // ignore: avoid_print
-          print(
-            'AuthRepository: ensuring user document for ${firebaseUser.uid}',
-          );
+
           await _remoteDataSource.ensureUserDocument(firebaseUser);
           profileSubscription = _remoteDataSource
               .watchUserProfile(firebaseUser.uid)
               .listen((profile) {
-                // debug: profile stream emitted -> $profile
-                // ignore: avoid_print
-                print('AuthRepository: profile snapshot -> $profile');
                 controller.add(profile);
               });
         }, onError: controller.addError);

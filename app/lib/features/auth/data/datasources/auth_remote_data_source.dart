@@ -47,7 +47,6 @@ class AuthRemoteDataSource {
             'photoUrl': user.photoURL,
             'createdAt': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true));
-
       return AppUserModel(
         id: user.uid,
         email: email,
@@ -70,20 +69,11 @@ class AuthRemoteDataSource {
         .doc(userId)
         .snapshots()
         .map((snapshot) {
-          // debug: received user profile snapshot for $userId (exists=${snapshot.exists})
-          // ignore: avoid_print
-          print(
-            'AuthRemoteDataSource: watchUserProfile snapshot for $userId exists=${snapshot.exists}',
-          );
           if (!snapshot.exists) {
             return null;
           }
           final model = AppUserModel.fromFirestore(snapshot);
-          // debug: parsed AppUserModel -> $model
-          // ignore: avoid_print
-          print(
-            'AuthRemoteDataSource: parsed AppUserModel for $userId -> $model',
-          );
+
           return model;
         });
   }
@@ -114,15 +104,10 @@ class AuthRemoteDataSource {
     final docRef = _firestore
         .collection(FirestoreCollections.users)
         .doc(user.uid);
-    // debug: ensureUserDocument called for uid
-    // ignore: avoid_print
-    print('AuthRemoteDataSource: ensureUserDocument for ${user.uid}');
+
     final snapshot = await docRef.get();
 
     if (!snapshot.exists) {
-      // debug: user doc does not exist, creating
-      // ignore: avoid_print
-      print('AuthRemoteDataSource: creating user document for ${user.uid}');
       await docRef.set({
         'email': user.email ?? '',
         'name': user.displayName ?? 'New User',
@@ -133,9 +118,6 @@ class AuthRemoteDataSource {
       return;
     }
 
-    // debug: user doc exists, merging updates
-    // ignore: avoid_print
-    print('AuthRemoteDataSource: merging user document for ${user.uid}');
     await docRef.set({
       'email': user.email ?? '',
       'name': user.displayName ?? snapshot.data()?['name'] ?? 'User',

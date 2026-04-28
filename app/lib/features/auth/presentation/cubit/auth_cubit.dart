@@ -63,14 +63,13 @@ class AuthCubit extends Cubit<AuthState> {
   }) async {
     try {
       emit(state.copyWith(status: RequestStatus.loading, clearError: true));
+
       final createdUser = await _signUpWithEmailUseCase(
         name: name,
         email: email,
         password: password,
       );
-      // debug log: created user from signup usecase
-      // ignore: avoid_print
-      print('AuthCubit: signUpWithEmail success -> $createdUser');
+
       emit(
         state.copyWith(
           status: RequestStatus.success,
@@ -79,9 +78,6 @@ class AuthCubit extends Cubit<AuthState> {
         ),
       );
     } catch (error) {
-      // debug log: signup error
-      // ignore: avoid_print
-      print('AuthCubit: signUpWithEmail error -> $error');
       emit(
         state.copyWith(
           status: RequestStatus.failure,
