@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -133,6 +135,12 @@ class _ExamDesignerViewState extends State<_ExamDesignerView> {
     final titleController = TextEditingController();
     final descriptionController = TextEditingController();
     final durationController = TextEditingController(text: '30');
+    final questionController = TextEditingController();
+    final correctAnswerController = TextEditingController();
+    final wrongAnswerControllers = List.generate(
+      3,
+      (_) => TextEditingController(),
+    );
 
     await showModalBottomSheet<void>(
       context: context,
@@ -145,41 +153,107 @@ class _ExamDesignerViewState extends State<_ExamDesignerView> {
             20,
             MediaQuery.of(sheetContext).viewInsets.bottom + 20,
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AppTextField(
-                controller: titleController,
-                label: l10n.text('exam_title'),
-              ),
-              const SizedBox(height: 12),
-              AppTextField(
-                controller: descriptionController,
-                label: l10n.text('exam_description'),
-                maxLines: 3,
-              ),
-              const SizedBox(height: 12),
-              AppTextField(
-                controller: durationController,
-                label: l10n.text('duration_minutes'),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 16),
-              AppPrimaryButton(
-                label: l10n.text('save'),
-                icon: Icons.check_rounded,
-                onPressed: () {
-                  context.read<ExamCubit>().createExam(
-                    title: titleController.text.trim(),
-                    description: descriptionController.text.trim(),
-                    durationMinutes:
-                        int.tryParse(durationController.text.trim()) ?? 30,
-                    createdBy: widget.currentUserId,
-                  );
-                  Navigator.of(sheetContext).pop();
-                },
-              ),
-            ],
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppTextField(
+                  controller: titleController,
+                  label: l10n.text('exam_title'),
+                ),
+                const SizedBox(height: 12),
+                AppTextField(
+                  controller: descriptionController,
+                  label: l10n.text('exam_description'),
+                  maxLines: 3,
+                ),
+                const SizedBox(height: 12),
+                AppTextField(
+                  controller: durationController,
+                  label: l10n.text('duration_minutes'),
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  l10n.text('first_question'),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                AppTextField(
+                  controller: questionController,
+                  label: l10n.text('question'),
+                  maxLines: 2,
+                ),
+                const SizedBox(height: 12),
+                AppTextField(
+                  controller: correctAnswerController,
+                  label: l10n.text('correct_answer'),
+                ),
+                const SizedBox(height: 12),
+                for (
+                  var index = 0;
+                  index < wrongAnswerControllers.length;
+                  index++
+                )
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: AppTextField(
+                      controller: wrongAnswerControllers[index],
+                      label: '${l10n.text('wrong_answer')} ${index + 1}',
+                    ),
+                  ),
+                const SizedBox(height: 4),
+                AppPrimaryButton(
+                  label: l10n.text('save'),
+                  icon: Icons.check_rounded,
+                  onPressed: () {
+                    final title = titleController.text.trim();
+                    final description = descriptionController.text.trim();
+                    final question = questionController.text.trim();
+                    final correctAnswer = correctAnswerController.text.trim();
+                    final wrongAnswers =
+                        wrongAnswerControllers
+                            .map((controller) => controller.text.trim())
+                            .toList();
+
+                    if (title.isEmpty || description.isEmpty) {
+                      ToastService.error(l10n.text('validation_exam_required'));
+                      return;
+                    }
+
+                    if (question.isEmpty ||
+                        correctAnswer.isEmpty ||
+                        wrongAnswers.any((answer) => answer.isEmpty)) {
+                      ToastService.error(
+                        l10n.text('validation_question_required'),
+                      );
+                      return;
+                    }
+
+                    final shuffledOptions = _shuffleQuestionOptions(
+                      correctAnswer: correctAnswer,
+                      wrongAnswers: wrongAnswers,
+                    );
+
+                    context.read<ExamCubit>().createExam(
+                      title: title,
+                      description: description,
+                      durationMinutes:
+                          int.tryParse(durationController.text.trim()) ?? 30,
+                      createdBy: widget.currentUserId,
+                      initialQuestion: question,
+                      initialOptions: shuffledOptions.options,
+                      initialCorrectAnswerIndex:
+                          shuffledOptions.correctAnswerIndex,
+                    );
+                    Navigator.of(sheetContext).pop();
+                  },
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -195,19 +269,66 @@ class _ExamDesignerViewState extends State<_ExamDesignerView> {
 
     final l10n = context.l10n;
     final questionController = TextEditingController();
-    final optionControllers = List.generate(4, (_) => TextEditingController());
-    var correctAnswerIndex = 0;
+    final correctAnswerController = TextEditingController();
+    final wrongAnswerControllers = List.generate(
+      3,
+      (_) => TextEditingController(),
+    );
+
+    Future<void> saveQuestion({required bool keepDialogOpen}) async {
+      final question = questionController.text.trim();
+      final correctAnswer = correctAnswerController.text.trim();
+      final wrongAnswers =
+          wrongAnswerControllers
+              .map((controller) => controller.text.trim())
+              .toList();
+
+      if (question.isEmpty ||
+          correctAnswer.isEmpty ||
+          wrongAnswers.any((answer) => answer.isEmpty)) {
+        ToastService.error(l10n.text('validation_question_required'));
+        return;
+      }
+
+      final shuffledOptions = _shuffleQuestionOptions(
+        correctAnswer: correctAnswer,
+        wrongAnswers: wrongAnswers,
+      );
+
+      await context.read<ExamCubit>().addQuestion(
+        examId: examId,
+        question: question,
+        options: shuffledOptions.options,
+        correctAnswerIndex: shuffledOptions.correctAnswerIndex,
+      );
+
+      if (!context.mounted) {
+        return;
+      }
+
+      if (!keepDialogOpen) {
+        Navigator.of(context).pop();
+        return;
+      }
+
+      questionController.clear();
+      correctAnswerController.clear();
+      for (final controller in wrongAnswerControllers) {
+        controller.clear();
+      }
+    }
 
     await showDialog<void>(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(
-          builder: (context, setModalState) {
+          builder: (dialogContext, setModalState) {
             return AlertDialog(
               title: Text(l10n.text('add_mcq')),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     AppTextField(
                       controller: questionController,
@@ -215,31 +336,21 @@ class _ExamDesignerViewState extends State<_ExamDesignerView> {
                       maxLines: 2,
                     ),
                     const SizedBox(height: 12),
+                    AppTextField(
+                      controller: correctAnswerController,
+                      label: l10n.text('correct_answer'),
+                    ),
+                    const SizedBox(height: 12),
                     for (
                       var index = 0;
-                      index < optionControllers.length;
+                      index < wrongAnswerControllers.length;
                       index++
                     )
                       Padding(
                         padding: const EdgeInsets.only(bottom: 12),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: AppTextField(
-                                controller: optionControllers[index],
-                                label: '${l10n.text('question')} ${index + 1}',
-                              ),
-                            ),
-                            Radio<int>(
-                              value: index,
-                              groupValue: correctAnswerIndex,
-                              onChanged: (value) {
-                                setModalState(() {
-                                  correctAnswerIndex = value ?? 0;
-                                });
-                              },
-                            ),
-                          ],
+                        child: AppTextField(
+                          controller: wrongAnswerControllers[index],
+                          label: '${l10n.text('wrong_answer')} ${index + 1}',
                         ),
                       ),
                   ],
@@ -250,18 +361,15 @@ class _ExamDesignerViewState extends State<_ExamDesignerView> {
                   onPressed: () => Navigator.of(dialogContext).pop(),
                   child: Text(l10n.text('cancel')),
                 ),
+                TextButton(
+                  onPressed: () async {
+                    await saveQuestion(keepDialogOpen: true);
+                  },
+                  child: Text(l10n.text('save_add_another')),
+                ),
                 FilledButton(
-                  onPressed: () {
-                    context.read<ExamCubit>().addQuestion(
-                      examId: examId,
-                      question: questionController.text.trim(),
-                      options:
-                          optionControllers
-                              .map((controller) => controller.text.trim())
-                              .toList(),
-                      correctAnswerIndex: correctAnswerIndex,
-                    );
-                    Navigator.of(dialogContext).pop();
+                  onPressed: () async {
+                    await saveQuestion(keepDialogOpen: false);
                   },
                   child: Text(l10n.text('save')),
                 ),
@@ -272,6 +380,26 @@ class _ExamDesignerViewState extends State<_ExamDesignerView> {
       },
     );
   }
+}
+
+({List<String> options, int correctAnswerIndex}) _shuffleQuestionOptions({
+  required String correctAnswer,
+  required List<String> wrongAnswers,
+}) {
+  final shuffledOptions = [
+    ({'text': correctAnswer, 'isCorrect': true}),
+    for (final answer in wrongAnswers) ({'text': answer, 'isCorrect': false}),
+  ]..shuffle(Random());
+
+  return (
+    options:
+        shuffledOptions
+            .map((option) => option['text'] as String)
+            .toList(growable: false),
+    correctAnswerIndex: shuffledOptions.indexWhere(
+      (option) => option['isCorrect'] as bool,
+    ),
+  );
 }
 
 class _ExamList extends StatelessWidget {
@@ -458,7 +586,7 @@ class _ExamDetailsPanel extends StatelessWidget {
                               padding: const EdgeInsets.only(bottom: 6),
                               child: Text(
                                 '${optionIndex + 1}) ${question.options[optionIndex]}'
-                                '${optionIndex == question.correctAnswerIndex ? '  ✓' : ''}',
+                                '${optionIndex == question.correctAnswerIndex ? ' (${l10n.text('correct_answer')})' : ''}',
                               ),
                             ),
                         ],

@@ -7,6 +7,7 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/context_extensions.dart';
 import '../../../../shared/services/toast_service.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
+import '../../../../shared/widgets/empty_state_view.dart';
 import '../../../../shared/widgets/loading_view.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../student/presentation/cubit/student_cubit.dart';
@@ -80,6 +81,14 @@ class _ExamScreenView extends StatelessWidget {
               return Center(child: Text(l10n.text('no_exam_assigned')));
             }
 
+            if (details.questions.isEmpty) {
+              return EmptyStateView(
+                title: l10n.text('active_exam'),
+                message: l10n.text('no_questions_available'),
+                icon: Icons.quiz_outlined,
+              );
+            }
+
             return BlocBuilder<StudentCubit, StudentState>(
               builder: (context, studentState) {
                 final session = studentState.session;
@@ -150,6 +159,14 @@ class _ExamScreenView extends StatelessWidget {
                           icon: Icons.send_rounded,
                           isLoading: examState.status.isLoading,
                           onPressed: () {
+                            if (examState.selectedAnswers.length <
+                                details.questions.length) {
+                              ToastService.error(
+                                l10n.text('answer_all_questions'),
+                              );
+                              return;
+                            }
+
                             context.read<ExamCubit>().submitAnswers(
                               studentId: authUser!.id,
                               studentName: authUser.name,

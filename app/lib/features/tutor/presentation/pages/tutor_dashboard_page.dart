@@ -292,6 +292,19 @@ class _ExamsTab extends StatelessWidget {
                                             },
                                           ),
                                           OutlinedButton.icon(
+                                            onPressed: () {
+                                              context.push(
+                                                '${AppRouter.examDesignerPath}?examId=${exam.id}',
+                                              );
+                                            },
+                                            icon: const Icon(
+                                              Icons.edit_note_rounded,
+                                            ),
+                                            label: Text(
+                                              l10n.text('edit_questions'),
+                                            ),
+                                          ),
+                                          OutlinedButton.icon(
                                             onPressed:
                                                 exam.isActive
                                                     ? () {
@@ -369,7 +382,7 @@ class _ExamsTab extends StatelessWidget {
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(
-          builder: (context, setModalState) {
+          builder: (innerContext, setModalState) {
             return AlertDialog(
               title: Text(l10n.text('assign_exam')),
               content: SizedBox(

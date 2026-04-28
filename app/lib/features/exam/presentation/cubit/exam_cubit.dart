@@ -63,6 +63,9 @@ class ExamCubit extends Cubit<ExamState> {
     required String description,
     required int durationMinutes,
     required String createdBy,
+    String? initialQuestion,
+    List<String>? initialOptions,
+    int? initialCorrectAnswerIndex,
   }) async {
     try {
       emit(
@@ -78,6 +81,22 @@ class ExamCubit extends Cubit<ExamState> {
         durationMinutes: durationMinutes,
         createdBy: createdBy,
       );
+
+      if (initialQuestion != null &&
+          initialOptions != null &&
+          initialCorrectAnswerIndex != null) {
+        await _addQuestionUseCase(
+          examId: exam.id,
+          question: ExamQuestion(
+            id: DateTime.now().millisecondsSinceEpoch.toString(),
+            question: initialQuestion,
+            options: initialOptions,
+            correctAnswerIndex: initialCorrectAnswerIndex,
+            order: 0,
+          ),
+        );
+      }
+
       await loadExamDetails(exam.id);
       emit(
         state.copyWith(
