@@ -13,3 +13,6 @@ Future<void> main() async {
   final authCubit = getIt<AuthCubit>()..startListening();
   runApp(MyApp(authCubit: authCubit));
 }
+
+
+// this is test comment to test the rules of GitHub, please ignore it.
