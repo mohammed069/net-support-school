@@ -222,4 +222,199 @@ void main() {
       );
     });
   });
+
+  // ==================== Exam Submission and Results Tests ====================
+  group('Exam Submission and Results', () {
+    // ---------- submitAnswers ----------
+    group('submitAnswers', () {
+      /// Test: Should emit loading then success with hasSubmitted=true on success
+      blocTest<ExamCubit, ExamState>(
+        'emits submitting then success state when submission is successful',
+        seed: () => ExamState(
+          status: RequestStatus.success,
+          examDetails: sampleExamDetails,
+          selectedAnswers: const {'q-1': 1},
+        ),
+        setUp: () {
+          when(
+            () => mockSubmitExamAnswersUseCase(
+              studentId: any(named: 'studentId'),
+              studentName: any(named: 'studentName'),
+              examId: any(named: 'examId'),
+              answers: any(named: 'answers'),
+            ),
+          ).thenAnswer((_) async => {});
+        },
+        build: () => examCubit,
+        act: (cubit) => cubit.submitAnswers(
+          studentId: testStudentId,
+          studentName: testStudentName,
+          autoSubmitted: false,
+        ),
+        expect: () => [
+          // Loading state
+          isA<ExamState>().having(
+            (state) => state.status,
+            'status',
+            RequestStatus.loading,
+          ),
+          // Success state with hasSubmitted true
+          isA<ExamState>()
+              .having(
+                (state) => state.status,
+                'status',
+                RequestStatus.success,
+              )
+              .having(
+                (state) => state.hasSubmitted,
+                'hasSubmitted',
+                true,
+              )
+              .having(
+                (state) => state.successMessage,
+                'successMessage',
+                'answers_submitted',
+              ),
+        ],
+      );
+
+      /// Test: Should emit failure state when submission fails
+      blocTest<ExamCubit, ExamState>(
+        'emits submitting then error state when submission fails',
+        seed: () => ExamState(
+          status: RequestStatus.success,
+          examDetails: sampleExamDetails,
+          selectedAnswers: const {'q-1': 1},
+        ),
+        setUp: () {
+          when(
+            () => mockSubmitExamAnswersUseCase(
+              studentId: any(named: 'studentId'),
+              studentName: any(named: 'studentName'),
+              examId: any(named: 'examId'),
+              answers: any(named: 'answers'),
+            ),
+          ).thenThrow(Exception('Submission failed'));
+        },
+        build: () => examCubit,
+        act: (cubit) => cubit.submitAnswers(
+          studentId: testStudentId,
+          studentName: testStudentName,
+          autoSubmitted: false,
+        ),
+        expect: () => [
+          isA<ExamState>().having(
+            (state) => state.status,
+            'status',
+            RequestStatus.loading,
+          ),
+          isA<ExamState>()
+              .having(
+                (state) => state.status,
+                'status',
+                RequestStatus.failure,
+              )
+              .having(
+                (state) => state.errorMessage,
+                'errorMessage',
+                contains('Submission failed'),
+              ),
+        ],
+      );
+
+      /// Test: Should not submit if already submitted
+      blocTest<ExamCubit, ExamState>(
+        'does not re-submit if already submitted',
+        seed: () => ExamState(
+          status: RequestStatus.success,
+          examDetails: sampleExamDetails,
+          hasSubmitted: true,
+        ),
+        build: () => examCubit,
+        act: (cubit) => cubit.submitAnswers(
+          studentId: testStudentId,
+          studentName: testStudentName,
+          autoSubmitted: false,
+        ),
+        expect: () => [],
+        verify: (_) {
+          verifyNever(
+            () => mockSubmitExamAnswersUseCase(
+              studentId: any(named: 'studentId'),
+              studentName: any(named: 'studentName'),
+              examId: any(named: 'examId'),
+              answers: any(named: 'answers'),
+            ),
+          );
+        },
+      );
+
+      /// Test: Should set auto_submitted message when auto-submitted
+      blocTest<ExamCubit, ExamState>(
+        'emits auto_submitted success message when auto-submitted by timer',
+        seed: () => ExamState(
+          status: RequestStatus.success,
+          examDetails: sampleExamDetails,
+          selectedAnswers: const {'q-1': 0},
+        ),
+        setUp: () {
+          when(
+            () => mockSubmitExamAnswersUseCase(
+              studentId: any(named: 'studentId'),
+              studentName: any(named: 'studentName'),
+              examId: any(named: 'examId'),
+              answers: any(named: 'answers'),
+            ),
+          ).thenAnswer((_) async => {});
+        },
+        build: () => examCubit,
+        act: (cubit) => cubit.submitAnswers(
+          studentId: testStudentId,
+          studentName: testStudentName,
+          autoSubmitted: true,
+        ),
+        expect: () => [
+          isA<ExamState>().having(
+            (state) => state.status,
+            'status',
+            RequestStatus.loading,
+          ),
+          isA<ExamState>()
+              .having(
+                (state) => state.hasSubmitted,
+                'hasSubmitted',
+                true,
+              )
+              .having(
+                (state) => state.successMessage,
+                'successMessage',
+                'auto_submitted',
+              ),
+        ],
+      );
+    });
+
+    // ---------- selectAnswer ----------
+    group('selectAnswer', () {
+      /// Test: Should update selectedAnswers map correctly
+      test('updates selected answers map with chosen answer', () {
+        examCubit.selectAnswer(questionId: 'q-1', answerIndex: 2);
+        expect(examCubit.state.selectedAnswers, {'q-1': 2});
+      });
+
+      /// Test: Should override previous selection for same question
+      test('overrides previous answer for the same question', () {
+        examCubit.selectAnswer(questionId: 'q-1', answerIndex: 0);
+        examCubit.selectAnswer(questionId: 'q-1', answerIndex: 3);
+        expect(examCubit.state.selectedAnswers, {'q-1': 3});
+      });
+
+      /// Test: Should handle multiple questions independently
+      test('handles multiple question selections independently', () {
+        examCubit.selectAnswer(questionId: 'q-1', answerIndex: 1);
+        examCubit.selectAnswer(questionId: 'q-2', answerIndex: 0);
+        expect(examCubit.state.selectedAnswers, {'q-1': 1, 'q-2': 0});
+      });
+    });
+  });
 }
