@@ -31,4 +31,18 @@ void main() {
       // TODO: Implement loading error test
     });
   });
+
+  group('Exam Submission and Results', () {
+    test('emits submitting then results state when submission is successful', () {
+      // TODO: Implement submission success test
+    });
+
+    test('emits submitting then error state when submission fails', () {
+      // TODO: Implement submission error test
+    });
+
+    test('calculates correct score based on correct answers', () {
+      // TODO: Implement score calculation test
+    });
+  });
 }
