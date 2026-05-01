@@ -1,3 +1,4 @@
+import 'package:app/core/router/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -43,7 +44,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
         curve: Curves.easeInOut,
       );
     } else {
-      context.go('/login');
+      context.go(AppRouter.loginPath);
     }
   }
 
@@ -56,7 +57,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
         foregroundColor: Theme.of(context).textTheme.bodyLarge?.color,
         actions: [
           TextButton(
-            onPressed: () => context.go('/login'),
+            onPressed: () => context.go(AppRouter.loginPath),
             child: const Text('Skip'),
           ),
         ],

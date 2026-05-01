@@ -1,3 +1,5 @@
+import 'package:app/features/onboarding/presentation/pages/onboarding_page.dart';
+import 'package:app/features/onboarding/presentation/pages/splash_screen.dart';
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
@@ -21,6 +23,8 @@ import '../utils/go_router_refresh_stream.dart';
 class AppRouter {
   AppRouter(this._authCubit);
 
+  static const splashPath = '/splash';
+  static const onboardingPath = '/onboarding';
   static const loginPath = '/login';
   static const signUpPath = '/sign-up';
   static const roleSelectionPath = '/role-selection';
@@ -34,10 +38,18 @@ class AppRouter {
   final AuthCubit _authCubit;
 
   late final GoRouter router = GoRouter(
-    initialLocation: loginPath,
+    initialLocation: splashPath,
     refreshListenable: GoRouterRefreshStream(_authCubit.stream),
     redirect: _redirect,
     routes: [
+      GoRoute(
+        path: splashPath,
+        builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: onboardingPath,
+        builder: (context, state) => const OnboardingPage(),
+      ),
       GoRoute(path: loginPath, builder: (context, state) => const LoginPage()),
       GoRoute(
         path: signUpPath,
@@ -117,6 +129,10 @@ class AppRouter {
   String? _redirect(BuildContext context, GoRouterState state) {
     final user = _authCubit.state.user;
     final location = state.matchedLocation;
+
+    if (location == splashPath || location == onboardingPath) {
+      return null;
+    }
 
     if (location == settingsPath) {
       return null;

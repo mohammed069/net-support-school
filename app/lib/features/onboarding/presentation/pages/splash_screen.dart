@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app/core/router/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -16,7 +17,7 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
     Timer(const Duration(seconds: 2), () {
       if (!mounted) return;
-      context.go('/onboarding');
+      context.go(AppRouter.onboardingPath);
     });
   }
 
@@ -36,8 +37,6 @@ class _SplashScreenState extends State<SplashScreen> {
               height: 200,
               fit: BoxFit.contain,
             ),
-            const SizedBox(height: 24),
-            const CircularProgressIndicator(),
           ],
         ),
       ),
