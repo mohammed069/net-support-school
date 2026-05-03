@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/router/app_router.dart';
 import '../../../../core/settings/app_settings_controller.dart';
 import '../../../../core/utils/context_extensions.dart';
 
@@ -19,6 +21,30 @@ class SettingsPage extends StatelessWidget {
           return ListView(
             padding: const EdgeInsets.all(20),
             children: [
+              Card(
+                child: Column(
+                  children: [
+                    ListTile(
+                      leading: const CircleAvatar(
+                        child: Icon(Icons.person_rounded),
+                      ),
+                      title: Text(l10n.text('profile')),
+                      subtitle: Text(l10n.text('profile_subtitle')),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: () => context.push(AppRouter.profilePath),
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
+                      leading: const Icon(Icons.lock_reset_rounded),
+                      title: Text(l10n.text('change_password')),
+                      subtitle: Text(l10n.text('security')),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: () => context.push(AppRouter.changePasswordPath),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(20),
