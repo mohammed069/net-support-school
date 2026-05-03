@@ -11,6 +11,9 @@ import '../../features/auth/presentation/pages/sign_up_page.dart';
 import '../../features/exam/presentation/cubit/exam_cubit.dart';
 import '../../features/exam/presentation/pages/exam_designer_page.dart';
 import '../../features/exam/presentation/pages/exam_screen_page.dart';
+import '../../features/profile/presentation/pages/change_password_page.dart';
+import '../../features/profile/presentation/pages/edit_profile_page.dart';
+import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/student/presentation/cubit/student_cubit.dart';
 import '../../features/student/presentation/pages/student_home_page.dart';
@@ -34,6 +37,9 @@ class AppRouter {
   static const reportPath = '/report';
   static const examDesignerPath = '/exam-designer';
   static const settingsPath = '/settings';
+  static const profilePath = '/profile';
+  static const editProfilePath = '/edit-profile';
+  static const changePasswordPath = '/change-password';
 
   final AuthCubit _authCubit;
 
@@ -62,6 +68,18 @@ class AppRouter {
       GoRoute(
         path: settingsPath,
         builder: (context, state) => const SettingsPage(),
+      ),
+      GoRoute(
+        path: profilePath,
+        builder: (context, state) => const ProfilePage(),
+      ),
+      GoRoute(
+        path: editProfilePath,
+        builder: (context, state) => const EditProfilePage(),
+      ),
+      GoRoute(
+        path: changePasswordPath,
+        builder: (context, state) => const ChangePasswordPage(),
       ),
       GoRoute(
         path: studentHomePath,
@@ -135,6 +153,12 @@ class AppRouter {
     }
 
     if (location == settingsPath) {
+      return null;
+    }
+
+    if (location == profilePath ||
+        location == editProfilePath ||
+        location == changePasswordPath) {
       return null;
     }
 
